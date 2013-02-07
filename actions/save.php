@@ -1,11 +1,11 @@
 <?php
 /**
- * Save au_set entity
+ * Save pinboard entity
  *
  */
 
 // start a new sticky form session in case of failure
-elgg_make_sticky_form('au_set');
+elgg_make_sticky_form('pinboard');
 
 // store errors to pass along
 $error = FALSE;
@@ -19,16 +19,16 @@ $pin = get_entity($pin_guid);
 
 if ($guid) {
 	$entity = get_entity($guid);
-	if (elgg_instanceof($entity, 'object', 'au_set') && $entity->canEdit()) {
-		$set = $entity;
+	if (elgg_instanceof($entity, 'object', 'pinboard') && $entity->canEdit()) {
+		$pinboard = $entity;
 	} else {
-		register_error(elgg_echo('au_sets:error:post_not_found'));
+		register_error(elgg_echo('pinboards:error:post_not_found'));
 		forward(get_input('forward', REFERER));
 	}
 
 } else {
-	$set = new ElggObject();
-	$set->subtype = 'au_set';
+	$pinboard = new ElggObject();
+	$pinboard->subtype = 'pinboard';
 	$new_post = TRUE;
 }
 
@@ -56,7 +56,7 @@ foreach ($values as $name => $default) {
 	}
 
 	if (in_array($name, $required) && empty($value)) {
-		$error = elgg_echo("au_sets:error:missing:$name");
+		$error = elgg_echo("pinboards:error:missing:$name");
 	}
 
 	if ($error) {
@@ -78,7 +78,7 @@ foreach ($values as $name => $default) {
 				if (can_write_to_container($user->getGUID(), $value)) {
 					$values[$name] = $value;
 				} else {
-					$error = elgg_echo("au_sets:error:cannot_write_to_container");
+					$error = elgg_echo("pinboards:error:cannot_write_to_container");
 				}
 			} else {
 				unset($values[$name]);
@@ -100,8 +100,8 @@ foreach ($values as $name => $default) {
 // assign values to the entity, stopping on error.
 if (!$error) {
 	foreach ($values as $name => $value) {
-		if (FALSE === ($set->$name = $value)) {
-			$error = elgg_echo('au_sets:error:cannot_save', array("$name=$value"));
+		if (FALSE === ($pinboard->$name = $value)) {
+			$error = elgg_echo('pinboards:error:cannot_save', array("$name=$value"));
 			break;
 		}
 	}
@@ -109,33 +109,33 @@ if (!$error) {
 
 // only try to save base entity if no errors
 if (!$error) {
-	if ($set->save()) {
+	if ($pinboard->save()) {
 		// remove sticky form entries
-		elgg_clear_sticky_form('au_set');
+		elgg_clear_sticky_form('pinboard');
 
-		system_message(elgg_echo('au_sets:message:saved'));
+		system_message(elgg_echo('pinboards:message:saved'));
 
 
 		if ($new_post) {
-			add_to_river('river/object/au_set/create', 'create', $set->owner_guid, $set->getGUID());
+			add_to_river('river/object/pinboard/create', 'create', $pinboard->owner_guid, $pinboard->getGUID());
 		}
-		
+
 		$has_uploaded_icon = (!empty($_FILES['icon']['type']) && substr_count($_FILES['icon']['type'], 'image/'));
-		
+
 		if ($has_uploaded_icon) {
 
 		  $icon_sizes = elgg_get_config('icon_sizes');
 
-		  $prefix = "pinboards/" . $set->guid;
+		  $prefix = "pinboards/" . $pinboard->guid;
 
 		  $filehandler = new ElggFile();
-		  $filehandler->owner_guid = $set->owner_guid;
+		  $filehandler->owner_guid = $pinboard->owner_guid;
 		  $filehandler->setFilename($prefix . ".jpg");
 		  $filehandler->open("write");
 		  $filehandler->write(get_uploaded_file('icon'));
 		  $filehandler->close();
 		  $filename = $filehandler->getFilenameOnFilestore();
-		  
+
 		  $sizes = array('tiny', 'small', 'medium', 'large');
 
 		  $thumbs = array();
@@ -150,9 +150,9 @@ if (!$error) {
 
 		  if ($thumbs['tiny']) { // just checking if resize successful
 			$thumb = new ElggFile();
-			$thumb->owner_guid = $set->owner_guid;
+			$thumb->owner_guid = $pinboard->owner_guid;
 			$thumb->setMimeType('image/jpeg');
-			
+
 			foreach ($sizes as $size) {
 			  $thumb->setFilename("{$prefix}{$size}.jpg");
 			  $thumb->open("write");
@@ -160,24 +160,24 @@ if (!$error) {
 			  $thumb->close();
 			}
 
-			$set->icontime = time();
+			$pinboard->icontime = time();
 		  }
 		}
-		
+
 		if ($pin) {
-		  elgg_load_library('au_sets');
-		  if (au_sets_pin_entity($pin, $set)) {
+		  elgg_load_library('pinboards');
+		  if (pinboards_pin_entity($pin, $pinboard)) {
 			$name = $pin->title ? $pin->title : $pin->name;
-			system_message(elgg_echo('au_sets:autopinned', array($name)));
+			system_message(elgg_echo('pinboards:autopinned', array($name)));
 		  }
 		}
-		
-		// send to the set in layout mode
-		forward($set->getURL() . '?view_layout=1');
+
+		// send to the pinboard in layout mode
+		forward($pinboard->getURL() . '?view_layout=1');
 
 	}
 	else {
-		register_error(elgg_echo('au_sets:error:cannot_save'));
+		register_error(elgg_echo('pinboards:error:cannot_save'));
 		forward($error_forward_url);
 	}
 }

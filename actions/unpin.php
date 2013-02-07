@@ -1,21 +1,21 @@
 <?php
 
-$set_guid = get_input('set_guid');
+$pinboard_guid = get_input('pinboard_guid');
 $entity_guid = get_input('entity_guid');
 
-$set = get_entity($set_guid);
+$pinboard = get_entity($pinboard_guid);
 $entity = get_entity($entity_guid);
 
 // make sure we load our functions
-elgg_load_library('au_sets');
+elgg_load_library('pinboards');
 
-if (!au_sets_is_pinned($entity, $set)) {
-  register_error(elgg_echo('au_sets:error:unpinned'));
+if (!pinboards_is_pinned($entity, $pinboard)) {
+  register_error(elgg_echo('pinboards:error:unpinned'));
   forward(REFERER);
 }
 
-if (au_sets_unpin_entity($entity, $set)) {
-  system_message(elgg_echo('au_sets:success:unpinned'));
+if (pinboards_unpin_entity($entity, $pinboard)) {
+  system_message(elgg_echo('pinboards:success:unpinned'));
 }
 
 forward(REFERER);

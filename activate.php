@@ -1,3 +1,3 @@
 <?php
 
-add_subtype('object','au_set');
+add_subtype('object','pinboard');
